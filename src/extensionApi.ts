@@ -9,6 +9,8 @@ import { ServerInfo } from './server';
 import { ServersViewTreeDataProvider } from './serverExplorer';
 import { EditorUtil } from './editorutil';
 import * as vscode from 'vscode';
+import * as open from 'open';
+import * as path from 'path';
 import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
 export interface ExtensionAPI {
     readonly serverInfo: ServerInfo;
@@ -260,6 +262,18 @@ export class CommandHandler {
             }
             // Now we have a data map
             response1 = await this.initDownloadRuntimeRequest(rtId, workflowMap, response1.requestId);
+        }
+    }
+
+    // maybe we can make user choose which port to connect localhost
+    async openWebPage(context?: Protocol.ServerState): Promise<Protocol.Status> {
+        try {
+            const deploymentPath = context.deployableStates[0].reference.path;
+            const appName = path.basename(deploymentPath, path.extname(deploymentPath));
+            const uri = path.join('http://localhost:8080', appName);
+            await open(`${uri}`);
+        } catch (ex) {
+            return Promise.reject('Error during browser opening');
         }
     }
 

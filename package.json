@@ -38,6 +38,7 @@
     "onCommand:server.output",
     "onCommand:server.add",
     "onCommand:server.publish",
+    "onCommand:server.openWebPage",
     "onView:servers",
     "onLanguage:plaintext"
   ],
@@ -105,6 +106,11 @@
         "command": "server.publishFull",
         "title": "Publish Server (Full)",
         "category": "Servers"
+      },
+      {
+        "command": "server.openWebPage",
+        "title": "Open Project On Default Browser",
+        "category": "Servers"
       }
     ],
     "views": {
@@ -170,6 +176,11 @@
           "group": "4_server-status@1"
         },
         {
+          "command": "server.openWebPage",
+          "when": "view == servers && viewItem =~ '/(Started)/'",
+          "group": "4_server-status@2"
+        },
+        {
           "command": "server.downloadRuntime",
           "when": "view == servers",
           "group": "5_rsp@1"
@@ -232,7 +243,7 @@
     "sinon-chai": "^3.2.0",
     "tslint": "^5.11.0",
     "typescript": "^3.0.3",
-    "vscode": "^1.1.21"
+    "vscode": "^1.1.33"
   },
   "dependencies": {
     "expand-home-dir": "0.0.3",
@@ -241,6 +252,7 @@
     "fs-extra": "7.0.0",
     "fstream": "^1.0.11",
     "mkdirp": "0.5.1",
+    "open": "6.1.0",
     "path": "0.12.7",
     "path-exists": "^3.0.0",
     "pify": "4.0.0",
