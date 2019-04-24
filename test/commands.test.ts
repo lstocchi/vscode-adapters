@@ -377,4 +377,18 @@ suite('Command Handler', () => {
             }
         });
     });
+
+    suite('infoServer', () => {
+
+        test('errors if server explorer is not initialized', async () => {
+            const nullHandler = new CommandHandler(null, stubs.client);
+
+            try {
+                await nullHandler.infoServer();
+                expect.fail();
+            } catch (err) {
+                expect(err).equals('Runtime Server Protocol (RSP) Server is starting, please try again later.');
+            }
+        });
+    });
 });

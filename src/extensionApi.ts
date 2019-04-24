@@ -263,6 +263,29 @@ export class CommandHandler {
         }
     }
 
+    public async infoServer(context?: Protocol.ServerState): Promise<void> {
+
+        if (context === undefined) {
+            if (this.serversData) {
+                const serverId = await vscode.window.showQuickPick(Array.from(this.serversData.serverStatus.keys()),
+                { placeHolder: 'Select runtime/server you want to retrieve info about' });
+                if (!serverId) return Promise.reject('Please select a server from the Servers view.');
+                context = this.serversData.serverStatus.get(serverId);
+            } else {
+                return Promise.reject('Runtime Server Protocol (RSP) Server is starting, please try again later.');
+            }
+        }
+
+        const selectedServerType: Protocol.ServerType = context.server.type;
+        const selectedServerName: string = context.server.id;
+
+        const outputChannel = vscode.window.createOutputChannel("vscode-adapter");
+        outputChannel.show();
+        outputChannel.appendLine(`Server Name: ${selectedServerName}`);
+        outputChannel.appendLine(`Server Id: ${selectedServerType.id}`);
+        outputChannel.appendLine(`Server Description: ${selectedServerType.visibleName}`);
+    }
+
     private async promptUser(item: Protocol.WorkflowResponseItem, workflowMap: {}): Promise<boolean> {
         const prompt = item.label + (item.content ? `\n${item.content}` : '');
         let userInput: any = null;
