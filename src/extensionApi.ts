@@ -164,7 +164,7 @@ export class CommandHandler {
         await this.client.getOutgoingSyncHandler().stopServerSync({ id: context.server.id, force: true });
 
         if (mode === 'debug') {
-            //await this.debugServer(context);
+            await this.debugServer(context);
         } else {
             const params: Protocol.LaunchParameters = {
                 mode: mode,
