@@ -4,6 +4,7 @@
  *-----------------------------------------------------------------------------------------------*/
 
 import * as chai from 'chai';
+import { DebugInfoProvider } from '../src/DebugInfoProvider';
 import { CommandHandler } from '../src/extensionApi';
 import { Protocol, ServerState } from 'rsp-client';
 import { ServersViewTreeDataProvider } from '../src/serverExplorer';
@@ -209,7 +210,7 @@ suite('Command Handler', () => {
         });
 
         test('display error if language is not supported', async () => {
-            sandbox.stub(serverExplorer, 'retrieveDebugInfo').resolves(cmdDetails);
+            sandbox.stub(DebugInfoProvider, 'retrieve').resolves(cmdDetails);
             const sinonSpy = sandbox.spy(vscode.window, 'showErrorMessage');
             await handler.debugServer(serverState);
             sandbox.assert.calledOnce(sinonSpy);
