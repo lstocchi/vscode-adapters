@@ -5,6 +5,8 @@
 
 'use strict';
 
+import { DebugInfo } from './DebugInfo';
+import { DebugInfoProvider } from './DebugInfoProvider';
 import { EditorUtil } from './editorutil';
 import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
 import { ServerInfo } from './server';
@@ -82,15 +84,13 @@ export class CommandHandler {
     }
 
     public async debugServer(context?: Protocol.ServerState): Promise<Protocol.StartServerResponse> {
-
         if (context === undefined) {
             const selectedServerId = await this.selectServer('Select server to start.');
             if (!selectedServerId) return;
             context = this.serversData.serverStatus.get(selectedServerId);
         }
 
-        const debugInfo = await this.serversData.retrieveDebugInfo(context.server);
-
+        const debugInfo: DebugInfo = await DebugInfoProvider.retrieve(context.server, this.client);
         const extensionIsRequired = await this.checkExtension(debugInfo);
 
         if (extensionIsRequired) {
@@ -98,22 +98,18 @@ export class CommandHandler {
             return;
         }
 
-        return this.startServer('debug', context).then(
-            status => {
-                vscode.debug.startDebugging(undefined,
-                    {
-                        type: 'java',
-                        request: 'attach',
-                        name: 'Debug (Remote)',
-                        hostName: 'localhost',
-                        port: `${status.details.properties['debug.details.port']}`
-                    }
-                );
-
-                return status;
-            }
-        );
-
+        this.startServer('debug', context)
+            .then(serverStarted => {
+                const debugConfig: vscode.DebugConfiguration = {
+                    type: 'java',
+                    request: 'attach',
+                    name: 'Debug (Remote)',
+                    hostName: 'localhost',
+                    port: DebugInfoProvider.create(serverStarted.details).getPort()
+                };
+                vscode.debug.startDebugging(undefined, debugConfig);
+                return serverStarted;
+            });
     }
 
     public async removeServer(context?: Protocol.ServerState): Promise<Protocol.Status> {
@@ -161,22 +157,23 @@ export class CommandHandler {
             context = this.serversData.serverStatus.get(serverId);
         }
 
-        await this.client.getOutgoingSyncHandler().stopServerSync({ id: context.server.id, force: true });
+        await this.client.getOutgoingSyncHandler().stopServerSync({ id: context.server.id, force: true })
+            .then(() => {
+                if (mode === 'debug') {
+                    return this.debugServer(context);
+                } else {
+                    const params: Protocol.LaunchParameters = {
+                        mode: mode,
+                        params: {
+                            id: context.server.id,
+                            serverType: context.server.type.id,
+                            attributes: new Map<string, any>()
+                        }
+                    };
 
-        if (mode === 'debug') {
-            await this.debugServer(context);
-        } else {
-            const params: Protocol.LaunchParameters = {
-                mode: mode,
-                params: {
-                    id: context.server.id,
-                    serverType: context.server.type.id,
-                    attributes: new Map<string, any>()
+                    return this.client.getOutgoingHandler().startServerAsync(params);
                 }
-            };
-
-            await this.client.getOutgoingHandler().startServerAsync(params);
-        }
+            });
     }
 
     public async addDeployment(context?: Protocol.ServerState): Promise<Protocol.Status> {
@@ -412,14 +409,18 @@ export class CommandHandler {
         }
     }
 
-    private async checkExtension(debugInfo: Protocol.CommandLineDetails): Promise<string> {
-        if (debugInfo && debugInfo.properties['debug.details.type'].indexOf('java') >= 0) {
-            if (vscode.extensions.getExtension('vscjava.vscode-java-debug') === undefined) {
-                return 'Debugger for Java extension is required. Install/Enable it before proceeding.';
-            }
-        } else {
-            return `Vscode-Adapters doesn\'t support debugging with ${debugInfo.properties['debug.details.type']} language at this time.`;
+    private async checkExtension(debugInfo: DebugInfo): Promise<string> {
+        if (!debugInfo.isJavaType()) {
+            return `Vscode-Adapters doesn\'t support debugging with ${debugInfo.getType()} language at this time.`;
         }
+
+        if (this.hasJavaDebugExtension()) {
+            return 'Debugger for Java extension is required. Install/Enable it before proceeding.';
+        }
+    }
+
+    private hasJavaDebugExtension(): boolean {
+        return vscode.extensions.getExtension('vscjava.vscode-java-debug') === undefined;
     }
 
     public async activate(): Promise<void> {
