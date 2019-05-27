@@ -5,8 +5,8 @@
 
 'use strict';
 
-import { DebugInfo } from './DebugInfo';
-import { DebugInfoProvider } from './DebugInfoProvider';
+import { DebugInfo } from './debugInfo';
+import { DebugInfoProvider } from './debugInfoProvider';
 import { EditorUtil } from './editorutil';
 import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
 import { ServerInfo } from './server';

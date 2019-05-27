@@ -4,7 +4,8 @@
  *-----------------------------------------------------------------------------------------------*/
 
 import * as chai from 'chai';
-import { DebugInfoProvider } from '../src/DebugInfoProvider';
+import { DebugInfo } from '../src/debuginfo';
+import { DebugInfoProvider } from '../src/debugInfoProvider';
 import { CommandHandler } from '../src/extensionApi';
 import { Protocol, ServerState } from 'rsp-client';
 import { ServersViewTreeDataProvider } from '../src/serverExplorer';
@@ -204,37 +205,41 @@ suite('Command Handler', () => {
         test('display error if no extension found', async () => {
             const stubM = sinon.stub(handler, 'checkExtension' as any);
             stubM.resolves('Debugger for Java extension is required. Install/Enable it before proceeding.');
-            const sinonSpy = sandbox.spy(vscode.window, 'showErrorMessage');
+            const showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage');
             await handler.debugServer(serverState);
-            sinon.assert.calledOnce(sinonSpy);
+            sinon.assert.calledOnce(showErrorMessageStub);
         });
 
         test('display error if language is not supported', async () => {
-            sandbox.stub(DebugInfoProvider, 'retrieve').resolves(cmdDetails);
-            const sinonSpy = sandbox.spy(vscode.window, 'showErrorMessage');
+            const debugInfo: DebugInfo = new DebugInfo(sandbox.stub() as unknown as Protocol.CommandLineDetails);
+            sandbox.stub(debugInfo, 'isJavaType').returns(false);
+            sandbox.stub(DebugInfoProvider, 'retrieve').resolves(debugInfo);
+            const startServerStub = givenServerStarted(sandbox, handler);
+            const showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage');
             await handler.debugServer(serverState);
-            sandbox.assert.calledOnce(sinonSpy);
+            sandbox.assert.calledOnce(showErrorMessageStub);
+            sandbox.assert.notCalled(startServerStub);
         });
 
-        test('works with injected context', async () => {
-            sandbox.stub(handler, 'checkExtension' as any).resolves(undefined);
-            const sinonSpy = sandbox.spy(handler, 'startServer');
-            const sinonSpyDebug = sandbox.spy(vscode.debug, 'startDebugging');
+        test('starts server & debugging with injected context', async () => {
+            givenDebugTypeIsSupported(sandbox, handler);
+            const startServerStub = givenServerStarted(sandbox, handler);
+            const startDebuggingStub = sandbox.stub(vscode.debug, 'startDebugging');
 
             await handler.debugServer(serverState);
-            sandbox.assert.calledOnce(sinonSpy);
-            sandbox.assert.calledOnce(sinonSpyDebug);
+            sandbox.assert.calledOnce(startServerStub);
+            sandbox.assert.calledOnce(startDebuggingStub);
         });
 
-        test('works without injected context', async () => {
+        test('starts server & debugging without injected context', async () => {
             sandbox.stub(vscode.window, 'showQuickPick').resolves('id');
-            sandbox.stub(handler, 'checkExtension' as any).resolves(undefined);
-            const sinonSpy = sandbox.spy(handler, 'startServer');
-            const sinonSpyDebug = sandbox.spy(vscode.debug, 'startDebugging');
+            givenDebugTypeIsSupported(sandbox, handler);
+            const startServerStub = givenServerStarted(sandbox, handler);
+            const startDebuggingStub = sandbox.stub(vscode.debug, 'startDebugging');
 
             await handler.debugServer(undefined);
-            sandbox.assert.calledOnce(sinonSpy);
-            sandbox.assert.calledOnce(sinonSpyDebug);
+            sandbox.assert.calledOnce(startServerStub);
+            sandbox.assert.calledOnce(startDebuggingStub);
         });
 
     });
@@ -508,3 +513,15 @@ suite('Command Handler', () => {
         });
     });
 });
+
+function givenServerStarted(sandbox: sinon.SinonSandbox, handler: CommandHandler) {
+    return sandbox.stub(handler, 'startServer')
+        .resolves(sandbox.stub() as unknown as Protocol.StartServerResponse);
+}
+
+function givenDebugTypeIsSupported(sandbox: sinon.SinonSandbox, handler: CommandHandler) {
+    const debugInfo: DebugInfo = new DebugInfo(sandbox.stub() as unknown as Protocol.CommandLineDetails);
+    sandbox.stub(DebugInfoProvider, 'retrieve').resolves(debugInfo);
+    sandbox.stub(handler, 'checkExtension' as any).resolves(undefined);
+}
+
