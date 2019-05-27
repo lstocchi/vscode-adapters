@@ -164,7 +164,7 @@ suite('Job Progress', () => {
     test('cancelling CancellationToke cancels job', () => {
         // given
         const onCancellationSpy = sandbox.spy(cancellationStub, 'onCancellationRequested');
-        stubs.outgoing.cancelJob = sinon.stub().withArgs(job).resolves();
+        stubs.outgoing.cancelJob = sandbox.stub().withArgs(job).resolves();
 
         JobProgress.create(stubs.client);
         callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
@@ -230,7 +230,7 @@ suite('Job Progress', () => {
     });
 
     test('show error that contains only message if there is no trace if job removal ended with error', () => {
-      // given
+        // given
         sandbox.stub(vscode.window, 'showErrorMessage');
         const timeoutStatus: Protocol.Status = {
             severity: 4,
@@ -247,15 +247,15 @@ suite('Job Progress', () => {
         JobProgress.create(stubs.client);
         callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
 
-      // when
+        // when
         callOnJobRemovedListenerWith(jobRemovedTimeout, stubs.incoming.onJobRemoved);
 
-      // then
+        // then
         expect(promise).to.eventually.rejectedWith('Error');
     });
 
     test('dont show error if job removal ended with success', () => {
-      // given
+        // given
         const timeoutStatus: Protocol.Status = {
             severity: 0,
             plugin: undefined,
@@ -271,10 +271,10 @@ suite('Job Progress', () => {
         JobProgress.create(stubs.client);
         callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
 
-      // when
+        // when
         callOnJobRemovedListenerWith(jobRemovedTimeout, stubs.incoming.onJobRemoved);
 
-      // then
+        // then
         expect(promise).to.eventually.equal(job);
     });
 });
