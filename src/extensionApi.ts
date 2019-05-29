@@ -6,10 +6,12 @@
 'use strict';
 
 import { EditorUtil } from './editorutil';
+import * as path from 'path';
 import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
 import { ServerInfo } from './server';
 import { ServersViewTreeDataProvider } from './serverExplorer';
 import * as vscode from 'vscode';
+import { spawn } from 'child_process';
 
 export interface ExtensionAPI {
     readonly serverInfo: ServerInfo;
@@ -29,6 +31,30 @@ export class CommandHandler {
     }
 
     public async startServer(mode: string, context?: Protocol.ServerState): Promise<Protocol.StartServerResponse> {
+        // source
+        let cwd = path.join(__dirname, '../../dialog/');
+        cwd = cwd.replace(/\//g, path.sep);
+
+        const spawnEnv = JSON.parse(JSON.stringify(process.env));
+
+        // remove those env vars
+        delete spawnEnv.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
+        delete spawnEnv.ELECTRON_RUN_AS_NODE;
+
+        const processDialog = spawn('npm', ['start'], {cwd: cwd, env: spawnEnv});
+        processDialog.stdout.on('data', (data) => {
+            let p = data.toString();
+            if (p === 'close') {
+                processDialog.kill();
+            }
+            vscode.window.showInformationMessage(p);
+        });
+
+        processDialog.stderr.on('data', (data) => {
+            let perr = data;
+        });
+
+        return;
         let selectedServerType: Protocol.ServerType;
         let selectedServerId: string;
 

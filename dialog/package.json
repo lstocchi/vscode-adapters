@@ -1,0 +1,15 @@
+{
+  "name": "dialog",
+  "version": "1.0.0",
+  "description": "dialog app electron",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^5.0.2"
+  }
+}
