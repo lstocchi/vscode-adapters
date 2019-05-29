@@ -42,25 +42,29 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
     public serverOutputChannels: Map<string, OutputChannel> = new Map<string, OutputChannel>();
     public runStateEnum: Map<number, string> = new Map<number, string>();
     public publishStateEnum: Map<number, string> = new Map<number, string>();
-    private serverAttributes: Map<string, {required: Protocol.Attributes; optional: Protocol.Attributes}> = new
-        Map<string, {required: Protocol.Attributes; optional: Protocol.Attributes}>();
+    private serverAttributes: Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}> =
+        new Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}>();
 
     constructor(client: RSPClient) {
         this.client = client;
-        this.runStateEnum.set(0, 'Unknown');
-        this.runStateEnum.set(1, 'Starting');
-        this.runStateEnum.set(2, 'Started');
-        this.runStateEnum.set(3, 'Stopping');
-        this.runStateEnum.set(4, 'Stopped');
 
-        this.publishStateEnum.set(1, 'Synchronized');
-        this.publishStateEnum.set(2, 'Publish Required');
-        this.publishStateEnum.set(3, 'Full Publish Required');
-        this.publishStateEnum.set(4, '+ Publish Required');
-        this.publishStateEnum.set(5, '- Publish Required');
-        this.publishStateEnum.set(6, 'Unknown');
+        this.runStateEnum
+            .set(0, 'Unknown')
+            .set(1, 'Starting')
+            .set(2, 'Started')
+            .set(3, 'Stopping')
+            .set(4, 'Stopped');
 
-        client.getOutgoingHandler().getServerHandles().then(servers => servers.forEach(async server => this.insertServer(server)));
+        this.publishStateEnum
+            .set(1, 'Synchronized')
+            .set(2, 'Publish Required')
+            .set(3, 'Full Publish Required')
+            .set(4, '+ Publish Required')
+            .set(5, '- Publish Required')
+            .set(6, 'Unknown');
+
+        client.getOutgoingHandler().getServerHandles()
+            .then(servers => servers.forEach(async server => this.insertServer(server)));
     }
 
     public async insertServer(event: Protocol.ServerHandle) {
@@ -170,10 +174,10 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
         if (!filePickerType) {
             return Promise.reject();
         }
-        //dialog behavior on different OS
-        //Windows -> if both options (canSelectFiles and canSelectFolders) are true, fs only shows folders
-        //Linux(fedora) -> if both options are true, fs shows both files and folders but files are unselectable
-        //Mac OS -> if both options are true, it works correctly
+        // dialog behavior on different OS
+        // Windows -> if both options (canSelectFiles and canSelectFolders) are true, fs only shows folders
+        // Linux(fedora) -> if both options are true, fs shows both files and folders but files are unselectable
+        // Mac OS -> if both options are true, it works correctly
         return {
             canSelectFiles: (showQuickPick ? filePickerType === deploymentStatus.file : true),
             canSelectMany: false,
@@ -354,21 +358,44 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
             treeItem.iconPath = Uri.file(path.join(__dirname, '../../images/server-light.png'));
             treeItem.contextValue =  pubState;
             return treeItem;
+        } else {
+            return undefined;
         }
     }
 
     public getChildren(element?:  Protocol.ServerState | Protocol.DeployableState):  Protocol.ServerState[] | Protocol.DeployableState[] {
         if (element === undefined) {
+            // no parent, root node -> return servers
             return Array.from(this.serverStatus.values());
-        }
-        if ((element as Protocol.ServerState).deployableStates ) {
+        } else if (this.isServerElement(element)) {
+            // server parent -> return deployables
             return (element as Protocol.ServerState).deployableStates;
+        } else {
+            return [];
         }
     }
 
-    public getParent(item?:  Protocol.ServerState | Protocol.DeployableState): Protocol.ServerState | Protocol.DeployableState {
-        if (item === undefined || (item as Protocol.ServerState).deployableStates) {
+    public getParent(element?:  Protocol.ServerState | Protocol.DeployableState): Protocol.ServerState | Protocol.DeployableState {
+        if (element === undefined || this.isServerElement(element)) {
+            return undefined;
+        } else if (this.isDeployableElement(element)) {
+            return this.getServerState(element as Protocol.DeployableState);
+        } else {
             return undefined;
         }
     }
+
+    private getServerState(element: Protocol.DeployableState): Protocol.ServerState {
+        const serverId: string = element.server.id;
+        return this.serverStatus.get(serverId);
+    }
+
+    private isServerElement(element: Protocol.ServerState | Protocol.DeployableState): boolean {
+        return (element as Protocol.ServerState).deployableStates !== undefined;
+    }
+
+    private isDeployableElement(element: Protocol.ServerState | Protocol.DeployableState): boolean {
+        return (element as Protocol.DeployableState).reference !== undefined;
+    }
+
 }

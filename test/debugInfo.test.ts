@@ -4,12 +4,13 @@
  *-----------------------------------------------------------------------------------------------*/
 import * as chai from 'chai';
 import * as chaipromise from 'chai-as-promised';
+import { ClientStubs } from './clientstubs';
 import { DebugInfo } from '../src/debugInfo';
 import { DebugInfoProvider } from '../src/debugInfoProvider';
+import { ProtocolStubs } from './protocolstubs';
 import { Protocol } from 'rsp-client';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import { Stubs } from './stubs';
 
 const expect = chai.expect;
 chai.use(sinonChai);
@@ -104,12 +105,11 @@ suite('DebugInfo', () => {
 
     test('Should retrieve java debug info', () => {
         // given
-        const stubs: Stubs = new Stubs(sandbox);
+        const stubs: ClientStubs = new ClientStubs(sandbox);
         stubs.outgoing.getLaunchCommand.resolves(javaCmdLineStub);
 
         // when
-        const debugInfo: Thenable<DebugInfo> = DebugInfoProvider.retrieve(
-            sandbox.stub() as unknown as Protocol.ServerHandle, stubs.client);
+        const debugInfo: Thenable<DebugInfo> = DebugInfoProvider.retrieve(ProtocolStubs.serverHandle, stubs.client);
 
         // then
         debugInfo.then(javaInfo => {

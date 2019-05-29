@@ -100,6 +100,10 @@ export class CommandHandler {
 
         this.startServer('debug', context)
             .then(serverStarted => {
+                if (!serverStarted
+                    || !serverStarted.details) {
+                    return Promise.reject(`Failed to start server ${context.server.id}`);
+                }
                 const debugConfig: vscode.DebugConfiguration = {
                     type: 'java',
                     request: 'attach',
@@ -108,7 +112,7 @@ export class CommandHandler {
                     port: DebugInfoProvider.create(serverStarted.details).getPort()
                 };
                 vscode.debug.startDebugging(undefined, debugConfig);
-                return serverStarted;
+                return Promise.resolve(serverStarted);
             });
     }
 
