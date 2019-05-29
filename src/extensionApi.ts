@@ -41,7 +41,7 @@ export class CommandHandler {
         delete spawnEnv.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
         delete spawnEnv.ELECTRON_RUN_AS_NODE;
 
-        const processDialog = spawn('npm', ['start'], {cwd: cwd, env: spawnEnv});
+        const processDialog = spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['start'], {cwd: cwd, env: spawnEnv});
         processDialog.stdout.on('data', (data) => {
             let p = data.toString();
             if (p === 'close') {
