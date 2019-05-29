@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+  </head>
+  <body style="background-color: rgb(37, 37, 38); border: 1px solid rgb(37, 37, 38); color: rgb(204, 204, 204)
+  ; font-family: Ubuntu, 'Droid Sans', sans-serif; font-size: 13px;">
+    <h1>Hello World!</h1>
+    We are using node 
+    <input id="txtTest" type="text" style="color: rgb(204, 204, 204) ;background-color: rgb(30, 30, 30); border: 1px solid rgb(37, 37, 38); width: 90%; height: 20px; " />
+    <button id="btnSave">Save</button>
+    <button id="btnCancel">Cancel</button>
+    <script>
+      (function(){
+        document.getElementById("btnSave").addEventListener("click", () => {
+          //process.on('message', 'cc');
+          var textTypedIn = document.getElementById("txtTest").value;
+          process.stdout.write(textTypedIn);
+          //process.stdout.write('c2');
+        });
+
+        document.getElementById("btnCancel").addEventListener("click", () => {
+          process.stdout.write("close");
+        });
+      })();
+    </script>
+  </body>
+</html>
