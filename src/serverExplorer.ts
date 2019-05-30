@@ -384,4 +384,8 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
             return undefined;
         }
     }
+
+    public getServerStates(): number[] {
+        return Array.from(this.serverStatus.values()).map(server => server.state);
+    }
 }

@@ -21,7 +21,6 @@ export class CommandHandler {
 
     private client: RSPClient;
     private serversData: ServersViewTreeDataProvider;
-    private static readonly NO_SERVERS_FILTER: number = -1;
 
     constructor(serversData: ServersViewTreeDataProvider, client: RSPClient) {
         this.client = client;
@@ -33,7 +32,7 @@ export class CommandHandler {
         let selectedServerId: string;
 
         if (context === undefined) {
-            selectedServerId = await this.selectServer('Select server to start.');
+            selectedServerId = await this.selectServer('Select server to start.', [ServerState.STOPPED]);
             if (!selectedServerId) return null;
             selectedServerType = this.serversData.serverStatus.get(selectedServerId).server.type;
         } else {
@@ -63,7 +62,7 @@ export class CommandHandler {
     public async stopServer(context?: Protocol.ServerState): Promise<Protocol.Status> {
         let serverId: string;
         if (context === undefined) {
-            serverId = await this.selectServer('Select server to stop.');
+            serverId = await this.selectServer('Select server to stop.', [ServerState.STARTED]);
             if (!serverId) return null;
         } else {
             serverId = context.server.id;
@@ -84,7 +83,7 @@ export class CommandHandler {
     public async debugServer(context?: Protocol.ServerState): Promise<Protocol.StartServerResponse> {
 
         if (context === undefined) {
-            const selectedServerId = await this.selectServer('Select server to start.');
+            const selectedServerId = await this.selectServer('Select server to start.', [ServerState.STOPPED]);
             if (!selectedServerId) return;
             context = this.serversData.serverStatus.get(selectedServerId);
         }
@@ -120,7 +119,7 @@ export class CommandHandler {
         let serverId: string;
         let selectedServerType: Protocol.ServerType;
         if (context === undefined) {
-            serverId = await this.selectServer('Select server to remove');
+            serverId = await this.selectServer('Select server to remove', [ServerState.STOPPED]);
             if (!serverId) return null;
             selectedServerType = this.serversData.serverStatus.get(serverId).server.type;
         } else {
@@ -156,7 +155,7 @@ export class CommandHandler {
 
     public async restartServer(context?: Protocol.ServerState): Promise<void> {
         if (context === undefined) {
-            const serverId: string = await this.selectServer('Select server to restart', ServerState.STARTED);
+            const serverId: string = await this.selectServer('Select server to restart', [ServerState.STARTED]);
             if (!serverId) return null;
             context = this.serversData.serverStatus.get(serverId);
         }
@@ -177,7 +176,7 @@ export class CommandHandler {
     public async addDeployment(context?: Protocol.ServerState): Promise<Protocol.Status> {
         let serverId: string;
         if (context === undefined) {
-            serverId = await this.selectServer('Select server to deploy to');
+            serverId = await this.selectServer('Select server to deploy to', this.serversData.getServerStates());
             if (!serverId) return null;
         } else {
             serverId = context.server.id;
@@ -226,7 +225,7 @@ export class CommandHandler {
     public async fullPublishServer(context?: Protocol.ServerState): Promise<Protocol.Status> {
         let serverId: string;
         if (context === undefined) {
-            serverId = await this.selectServer('Select server to publish');
+            serverId = await this.selectServer('Select server to publish', this.serversData.getServerStates());
             if (!serverId) return null;
         } else {
             serverId = context.server.id;
@@ -303,7 +302,7 @@ export class CommandHandler {
     public async infoServer(context?: Protocol.ServerState): Promise<void> {
         if (context === undefined) {
             if (this.serversData) {
-                const serverId = await this.selectServer('Select server you want to retrieve info about');
+                const serverId = await this.selectServer('Select server you want to retrieve info about', this.serversData.getServerStates());
                 if (!serverId) return null;
                 context = this.serversData.serverStatus.get(serverId);
             } else {
@@ -321,11 +320,11 @@ export class CommandHandler {
         outputChannel.appendLine(`Server Description: ${selectedServerType.visibleName}`);
     }
 
-    private async selectServer(message: string, stateFilter: number = CommandHandler.NO_SERVERS_FILTER): Promise<string> {
+    private async selectServer(message: string, stateFilter: number[] = []): Promise<string> {
         let servers = Array.from(this.serversData.serverStatus.keys());
-        if (stateFilter >= 0) {
+        if (stateFilter.length > 0) {
             servers = servers.filter(value => {
-                return this.serversData.serverStatus.get(value).state === stateFilter;
+                return stateFilter.indexOf(this.serversData.serverStatus.get(value).state) > -1;
             });
         }
         if (servers.length < 1) {
