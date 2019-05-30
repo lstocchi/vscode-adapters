@@ -4,7 +4,7 @@
  *-----------------------------------------------------------------------------------------------*/
 
 import * as chai from 'chai';
-import { DebugInfo } from '../src/debuginfo';
+import { DebugInfo } from '../src/debugInfo';
 import { DebugInfoProvider } from '../src/debugInfoProvider';
 import { CommandHandler } from '../src/extensionApi';
 import { Protocol, ServerState } from 'rsp-client';

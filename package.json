@@ -79,12 +79,12 @@
       },
       {
         "command": "server.restart",
-        "title": "Restart",
+        "title": "Restart in Run Mode",
         "category": "Servers"
       },
       {
         "command": "server.restartDebug",
-        "title": "Restart in Debug",
+        "title": "Restart in Debug Mode",
         "category": "Servers"
       },
       {
