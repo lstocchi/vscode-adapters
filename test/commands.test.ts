@@ -10,7 +10,7 @@ import { DebugInfoProvider } from '../src/debugInfoProvider';
 import { CommandHandler } from '../src/extensionApi';
 import { ProtocolStubs } from './protocolstubs';
 import { Protocol, ServerState } from 'rsp-client';
-import { ServersViewTreeDataProvider } from '../src/serverExplorer';
+import { ServerExplorer } from '../src/serverExplorer';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as vscode from 'vscode';
@@ -23,7 +23,7 @@ suite('Command Handler', () => {
     let sandboxDebug: sinon.SinonSandbox;
     let stubs: ClientStubs;
     let handler: CommandHandler;
-    let serverExplorer: ServersViewTreeDataProvider;
+    let serverExplorer: ServerExplorer;
 
     const simpleContext = {
         id: 'id'
@@ -40,7 +40,7 @@ suite('Command Handler', () => {
         stubs = new ClientStubs(sandbox);
         stubs.outgoing.getServerHandles = sandbox.stub().resolves([ProtocolStubs.serverHandle]);
         stubs.outgoing.getServerState = sandbox.stub().resolves(ProtocolStubs.serverState);
-        serverExplorer = new ServersViewTreeDataProvider(stubs.client);
+        serverExplorer = new ServerExplorer(stubs.client);
         handler = new CommandHandler(serverExplorer, stubs.client);
 
         serverExplorer.serverStatus.set('server', ProtocolStubs.serverState);

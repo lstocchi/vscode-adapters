@@ -9,7 +9,7 @@ import { ClientStubs } from './clientstubs';
 import * as path from 'path';
 import { ProtocolStubs } from './protocolstubs';
 import { Protocol } from 'rsp-client';
-import { ServersViewTreeDataProvider } from '../src/serverExplorer';
+import { ServerExplorer } from '../src/serverExplorer';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { EventEmitter, OutputChannel, TreeItemCollapsibleState, Uri, window } from 'vscode';
@@ -22,7 +22,7 @@ suite('Server explorer', () => {
     let sandbox: sinon.SinonSandbox;
     let getStub: sinon.SinonStub;
     let stubs: ClientStubs;
-    let serverExplorer: ServersViewTreeDataProvider;
+    let serverExplorer: ServerExplorer;
 
     const fakeChannel: OutputChannel = {
         append: () => {},
@@ -41,7 +41,7 @@ suite('Server explorer', () => {
         stubs.outgoing.getServerHandles = sandbox.stub().resolves([]);
         stubs.outgoing.getServerState = sandbox.stub().resolves(ProtocolStubs.serverState);
 
-        serverExplorer = new ServersViewTreeDataProvider(stubs.client);
+        serverExplorer = new ServerExplorer(stubs.client);
         getStub = sandbox.stub(serverExplorer.serverOutputChannels, 'get').returns(fakeChannel);
     });
 

@@ -89,11 +89,11 @@ suite('Extension Tests', () => {
 
     test('Server is started at extension activation time', async () => {
         sandbox.stub(CommandHandler.prototype, 'activate').resolves();
-        const registerTreeDataProviderStub = sandbox.stub(vscode.window, 'registerTreeDataProvider');
+        const createTreeViewStub = sandbox.stub(vscode.window, 'createTreeView');
         const result = await activate(context);
         expect(startStub).calledOnce;
         expect(result).deep.equals({serverInfo: serverdata});
-        expect(registerTreeDataProviderStub).calledOnce;
+        expect(createTreeViewStub).calledOnce;
     });
 
     test('should register all server commands', async () => {

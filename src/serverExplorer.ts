@@ -17,7 +17,8 @@ import {
     TreeItemCollapsibleState,
     Uri,
     window,
-    workspace
+    workspace,
+    TreeView
 } from 'vscode';
 
 import {
@@ -33,7 +34,7 @@ enum deploymentStatus {
     exploded = 'Exploded'
 }
 
-export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.ServerState | Protocol.DeployableState> {
+export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | Protocol.DeployableState> {
 
     private _onDidChangeTreeData: EventEmitter<Protocol.ServerState | undefined> = new EventEmitter<Protocol.ServerState | undefined>();
     public readonly onDidChangeTreeData: Event<Protocol.ServerState | undefined> = this._onDidChangeTreeData.event;
@@ -44,9 +45,11 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
     public publishStateEnum: Map<number, string> = new Map<number, string>();
     private serverAttributes: Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}> =
         new Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}>();
+    private readonly viewer: TreeView< Protocol.ServerState | Protocol.DeployableState>;
 
     constructor(client: RSPClient) {
         this.client = client;
+        this.viewer = window.createTreeView('servers', { treeDataProvider: this }) ;
 
         this.runStateEnum
             .set(0, 'Unknown')
@@ -119,9 +122,8 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
         }
     }
 
-    public selectNode(data: Protocol.ServerState): void {
-        const view = window.createTreeView('servers', { treeDataProvider: this });
-        view.reveal(data, { focus: true, select: true });
+    private selectNode(data: Protocol.ServerState): void {
+        this.viewer.reveal(data, { focus: true, select: true });
     }
 
     public async addDeployment(server: Protocol.ServerHandle): Promise<Protocol.Status> {
@@ -336,7 +338,7 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
     }
 
     public getTreeItem(item: Protocol.ServerState |  Protocol.DeployableState): TreeItem {
-        if ((item as Protocol.ServerState).deployableStates) {
+        if (this.isServerElement(item)) {
             // item is a serverState
             const state: Protocol.ServerState = item as Protocol.ServerState;
             const handle: Protocol.ServerHandle = state.server;
@@ -344,20 +346,22 @@ export class ServersViewTreeDataProvider implements TreeDataProvider< Protocol.S
             const runState: string = this.runStateEnum.get(state.state);
             const pubState: string = this.publishStateEnum.get(state.publishState);
             const depStr = `${id1} (${runState}) (${pubState})`;
-            const treeItem: TreeItem = new TreeItem(`${depStr}`, TreeItemCollapsibleState.Expanded);
-            treeItem.iconPath = ServerIcon.get(handle.type);
-            treeItem.contextValue =  runState;
-            return treeItem;
-        } else if ((item as Protocol.DeployableState).reference ) {
+            return { label: `${depStr}`,
+                iconPath: ServerIcon.get(handle.type),
+                contextValue: runState,
+                collapsibleState: TreeItemCollapsibleState.Expanded
+            };
+        } else if (this.isDeployableElement(item)) {
             const state: Protocol.DeployableState = item as Protocol.DeployableState;
             const id1: string = state.reference.label;
             const runState: string = this.runStateEnum.get(state.state);
             const pubState: string = this.publishStateEnum.get(state.publishState);
             const depStr = `${id1} (${runState}) (${pubState})`;
-            const treeItem: TreeItem = new TreeItem(`${depStr}`);
-            treeItem.iconPath = Uri.file(path.join(__dirname, '../../images/server-light.png'));
-            treeItem.contextValue =  pubState;
-            return treeItem;
+            return { label: `${depStr}`,
+                iconPath: Uri.file(path.join(__dirname, '../../images/server-light.png')),
+                contextValue: pubState,
+                collapsibleState: TreeItemCollapsibleState.None
+            }
         } else {
             return undefined;
         }
