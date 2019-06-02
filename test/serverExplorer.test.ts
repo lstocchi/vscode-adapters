@@ -86,10 +86,15 @@ suite('Server explorer', () => {
         expect(appendSpy).calledOnce;
     });
 
-    test('refresh should trigger getChildren call for root node', () => {
+    test('refresh element should fire event for element', () => {
+        // given
         const fireStub = sandbox.stub(EventEmitter.prototype, 'fire');
+        serverExplorer.selectNode = sandbox.stub();
+
+        // when
         serverExplorer.refresh(ProtocolStubs.serverState);
 
+        // then
         expect(fireStub).calledOnceWith(ProtocolStubs.serverState);
     });
 
@@ -156,11 +161,11 @@ suite('Server explorer', () => {
 
         test('call should update server state to received in state change event (Stopped)', () => {
             sandbox.stub(serverExplorer.runStateEnum, 'get').returns('Stopped');
+            serverExplorer.selectNode = sandbox.stub();
             const children = serverExplorer.getChildren();
             const treeItem = serverExplorer.getTreeItem(ProtocolStubs.serverState);
 
             serverExplorer.updateServer(stateChangeStopping);
-            serverExplorer.refresh();
             serverExplorer.updateServer(stateChangeStopped);
 
             expect(setStatusStub).calledTwice;
@@ -171,11 +176,11 @@ suite('Server explorer', () => {
 
         test('call should update server state to received in state change event (Started)', () => {
             sandbox.stub(serverExplorer.runStateEnum, 'get').returns('Started');
+            serverExplorer.selectNode = sandbox.stub();
             const children = serverExplorer.getChildren();
             const treeItem = serverExplorer.getTreeItem(ProtocolStubs.serverState);
 
             serverExplorer.updateServer(stateChangeStarting);
-            serverExplorer.refresh();
             serverExplorer.updateServer(stateChangeStarted);
 
             expect(setStatusStub).calledTwice;
@@ -186,6 +191,7 @@ suite('Server explorer', () => {
 
         test('call should update server state to received in state change event (Unknown)', () => {
             sandbox.stub(serverExplorer.runStateEnum, 'get').returns('Unknown');
+            serverExplorer.selectNode = sandbox.stub();
             const children = serverExplorer.getChildren();
             const treeItem = serverExplorer.getTreeItem(ProtocolStubs.serverState);
 

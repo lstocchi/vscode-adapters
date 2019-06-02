@@ -15,10 +15,10 @@ import {
     TreeDataProvider,
     TreeItem,
     TreeItemCollapsibleState,
+    TreeView,
     Uri,
     window,
-    workspace,
-    TreeView
+    workspace
 } from 'vscode';
 
 import {
@@ -73,7 +73,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
     public async insertServer(event: Protocol.ServerHandle) {
         const state = await this.client.getOutgoingHandler().getServerState(event);
         this.serverStatus.set(state.server.id, state);
-        this.refresh(state);
+        this.refresh();
     }
 
     public updateServer(event: Protocol.ServerState): void {
@@ -122,7 +122,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
         }
     }
 
-    private selectNode(data: Protocol.ServerState): void {
+    public selectNode(data: Protocol.ServerState): void {
         this.viewer.reveal(data, { focus: true, select: true });
     }
 
@@ -361,7 +361,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
                 iconPath: Uri.file(path.join(__dirname, '../../images/server-light.png')),
                 contextValue: pubState,
                 collapsibleState: TreeItemCollapsibleState.None
-            }
+            };
         } else {
             return undefined;
         }
