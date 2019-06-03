@@ -165,7 +165,7 @@ export class CommandHandler {
             .then(() => {
                 if (mode === 'debug') {
                     return this.debugServer(context);
-                } else {
+                } else if (mode === 'run') {
                     const params: Protocol.LaunchParameters = {
                         mode: mode,
                         params: {
@@ -176,6 +176,8 @@ export class CommandHandler {
                     };
 
                     return this.client.getOutgoingHandler().startServerAsync(params);
+                } else {
+                    return Promise.reject(`Could not restart server: unknown mode ${mode}`);
                 }
             });
     }
@@ -414,6 +416,10 @@ export class CommandHandler {
     }
 
     private async checkExtension(debugInfo: DebugInfo): Promise<string> {
+        if (!debugInfo) {
+            return `Could not find server debug info.`;
+        }
+
         if (!debugInfo.isJavaType()) {
             return `Vscode-Adapters doesn\'t support debugging with ${debugInfo.getType()} language at this time.`;
         }

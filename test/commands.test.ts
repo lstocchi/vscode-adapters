@@ -5,7 +5,7 @@
 
 import * as chai from 'chai';
 import { ClientStubs } from './clientstubs';
-import { DebugInfo } from '../src/debuginfo';
+import { DebugInfo } from '../src/debugInfo';
 import { DebugInfoProvider } from '../src/debugInfoProvider';
 import { CommandHandler } from '../src/extensionApi';
 import { ProtocolStubs } from './protocolstubs';

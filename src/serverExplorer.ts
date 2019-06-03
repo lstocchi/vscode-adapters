@@ -73,7 +73,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
     public async insertServer(event: Protocol.ServerHandle) {
         const state = await this.client.getOutgoingHandler().getServerState(event);
         this.serverStatus.set(state.server.id, state);
-        this.refresh();
+        this.refresh(state);
     }
 
     public updateServer(event: Protocol.ServerState): void {
@@ -116,7 +116,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
     }
 
     public refresh(data?: Protocol.ServerState): void {
-        this._onDidChangeTreeData.fire(data);
+        this._onDidChangeTreeData.fire();
         if (data !== undefined) {
             this.selectNode(data);
         }
@@ -380,9 +380,7 @@ export class ServerExplorer implements TreeDataProvider< Protocol.ServerState | 
     }
 
     public getParent(element?:  Protocol.ServerState | Protocol.DeployableState): Protocol.ServerState | Protocol.DeployableState {
-        if (element === undefined || this.isServerElement(element)) {
-            return undefined;
-        } else if (this.isDeployableElement(element)) {
+        if (this.isDeployableElement(element)) {
             return this.getServerState(element as Protocol.DeployableState);
         } else {
             return undefined;
